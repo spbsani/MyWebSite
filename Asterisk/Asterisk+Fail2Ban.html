@@ -1,0 +1,97 @@
+<html>
+<meta charset="Window-1251">
+ <head>
+   <title>Asterisk + Fail2Ban</title>
+ </head>
+
+<style>
+body{
+background: url(Fons/City_Landscape_Background.jpg) no-repeat;
+-moz-background-size: 100%;
+-webkit-background-size: 100%;
+-o-background-size: 100%;
+background-size: 100%;
+}
+</style>
+<body style="background-attachment:fixed" topmargin="0">
+<center><h1>Asterisk + Fail2Ban</h1></center>
+<hr>
+<br/><br/>
+</pre>
+До момента появления лога security в asterisk 10 fail2ban не мог корректно защищать asterisk от популярного вида атак — подбора sip пароля к экстеншенам.
+
+Если у вас Asterisk 10 и новее его успешно можно использовать на пару с fail2ban. Настройка довольно простая.
+
+
+1. Добавьте к /etc/asterisk/logger.conf
+
+[general]
+dateformat=%F %T
+
+
+и к секции [logfiles]
+
+security => security
+
+
+
+2. Добавьте в конец /etc/fail2ban/jail.conf
+
+[asterisk-iptables]
+enabled  = true
+filter   = asterisk
+action   = iptables-allports[name=ASTERISK, protocol=all]
+           sendmail-whois[name=ASTERISK, dest=root, sender=fail2ban@example.org]
+logpath  = /var/log/asterisk/security
+maxretry = 5
+bantime = 259200
+
+
+
+3. Создайте файл /etc/fail2ban/filter.d/asterisk.conf с содержимым:
+
+# Fail2Ban configuration file
+#
+#
+# $Revision: 250 $
+#
+
+[INCLUDES]
+
+# Read common prefixes. If any customizations available -- read them from
+# common.local
+#before = common.conf
+
+
+[Definition]
+
+#_daemon = asterisk
+
+# Option:  failregex
+# Notes.:  regex to match the password failures messages in the logfile. The
+#          host must be matched by a group named "host". The tag "" can
+#          be used for standard IP/hostname matching and is only an alias for
+#          (?:::f{4,6}:)?(?P\S+)
+# Values:  TEXT
+#
+
+failregex = SECURITY.* SecurityEvent="FailedACL".*RemoteAddress=".+?/.+?//.+?".*
+            SECURITY.* SecurityEvent="InvalidAccountID".*RemoteAddress=".+?/.+?//.+?".*
+            SECURITY.* SecurityEvent="ChallengeResponseFailed".*RemoteAddress=".+?/.+?//.+?".*
+            SECURITY.* SecurityEvent="InvalidPassword".*RemoteAddress=".+?/.+?//.+?".*
+
+# Option:  ignoreregex
+# Notes.:  regex to ignore. If this regex matches, the line is ignored.
+# Values:  TEXT
+#
+ignoreregex =
+
+
+
+Готово! fail2ban будет обнаруживать и предотвращать атаки по подбору SIP паролей. 
+<hr>
+</pre> 
+<br/><br/>
+До новых встреч!
+</body>
+</html>

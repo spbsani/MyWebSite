@@ -1,0 +1,186 @@
+<html>
+<meta charset="Window-1251">
+ <head>
+   <title>Asterisk+Asterisk_on_sip</title>
+ </head>
+
+<style>
+body{
+background: url(Fons/City_Landscape_Background.jpg) no-repeat;
+-moz-background-size: 100%;
+-webkit-background-size: 100%;
+-o-background-size: 100%;
+background-size: 100%;
+}
+</style>
+<body style="background-attachment:fixed" topmargin="0">
+<center><h1>Объединение двух Asterisk по протокулу sip</h1></center>
+<hr>
+<br/><br/>
+<pre>
+Объединен заключается в настройке двух конфигурационных файлов: sip.conf и extensions.conf
+рассмотрим sip.conf сервера находящегося в Москве.
+Педположим что на сервере в Санкт-Петербурге внутренние телефонные номера начинаются с 1000 а в Москве с 2000
+sip.conf 
+
+[globals]
+;alwaysauthreject=yes
+####################################################################
+[general]
+register => servermsk:Password@192.168.1.10/Asteriskspb ; Здесь мы добавляем регистрационные данные для подключения к серверу находящемуся в Санкт-Петербурге
+servermsk-контекст расположенный на сервере в Санкт-Петербурге а /Asterisksp на сервере в Москве 
+
+context = default
+videosupport = no
+autocreatepeer = no
+allowguest = no
+allowtransfer = yes  
+bindport = 5060
+bindaddr = 0.0.0.0
+;zachita
+alwaysauthreject = yes
+permit = 192.168.1.0/255.255.255.0
+permit = 82.204.XXX.XXX/255.255.XXX.XXX
+deny = 0.0.0.0/0.0.0.0
+disallow = all
+allow = alaw
+allow = ulaw
+call-limit = 2
+requirecalltoken = no
+subscribecontext = default
+
+[prov-mts]
+type = friend 
+autocreatepeer = no
+allowguest = no
+qualify = no
+fromuser = № вашего внешнего телефонного номера 
+fromdomain =
+host = 85.204.XXX.XXX
+port = 5060
+nat = no
+dtmfmode = rfc2833
+insecure = 
+context = Asteriskmsk
+
+disallow = all
+allow = alaw
+allow = ulaw
+requirecalltoken = no
+t38udptlsupport = yes
+t38pt_udptl = yes
+
+[prov-in_mts]
+host= 85.204.XXX.XXX
+type= friend
+allowguest = no
+qualify=no;
+port=5060
+context = Asteriskmsk
+disallow=all
+allow=ulaw
+allow=alaw
+insecure=invite
+
+[Asteriskspb]
+type = friend
+context=Asteriskmsk
+host = dynamic
+secret=123456
+nat=force_rport
+insecure=INVITE
+disallow = all
+allow = alaw
+allow = ulaw
+
+Теперь файл extensions.conf
+Добавляем в свой план набора шаблон, который будет принимать и отправлять запрос телефонного номера начинющегося 1000
+exten => _1XXX,1,Dial(SIP/Asteriskspb/${EXTEN},90,rRtTwW)
+exten => _1XXX,n,Hangup()
+
+Переходим к конфигурационным файлам второго сервера
+sip.conf
+
+[general]
+register => Asteriskspb:123456@192.168.21.20/asteriskmsk
+context=default
+videosupport=yes
+autocreatepeer=no
+allowguest=no
+allowtransfer=yes 
+bindport=5060
+bindaddr=0.0.0.0
+Ниже определяем каким подсетям можно подключаться
+alwaysauthreject=yes
+permit=192.168.1.0/255.255.255.0
+permit=192.168.21.0/255.255.255.0
+deny=0.0.0.0/0.0.0.0
+disallow=all
+allow=alaw
+allow=ulaw
+videosupport=yes
+call-limit=2
+requirecalltoken = no
+
+[prov-out]
+type=peer
+autocreatepeer=no
+allowguest=no
+;username=
+;secret=
+qualify=no
+fromuser=812678XXXX
+fromdomain=85.242.XXX.XXX
+host=85.242.XXX.XXX
+port=5060
+nat=no
+dtmfmode=rfc2833
+insecure=port;,invite
+context=spb
+disallow=all
+allow=alaw
+allow=ulaw
+requirecalltoken = no
+
+
+[prov-in]
+type=user  ;friend ;user
+autocreatepeer=no
+allowguest=no
+host=85.242.XXX.XXX
+qualify=no
+fromdomain= 
+nat=no
+port=5060
+disallow=all
+allow=alaw
+allow=ulaw
+allow=gsm
+language=ru
+requirecalltoken = no
+
+;##################################################
+[Asteriskmsk]
+type=friend
+host=dynamic
+context=spb
+secret=123456
+nat=force_rport
+insecure=INVITE
+disallow=all
+allow=ulaw
+allow=alaw
+
+Теперь файл extensions.conf
+exten => _2XXX,1,Dial(SIP/Asteriskmsk/${EXTEN},90,rRtTwW)
+exten => _2XXX,n,Hangup()
+
+Перезагружаеи план набора командой: dialplan reload
+Проверяем регистрацию на обоих серверах командой: sip show registry
+
+<hr>    
+</pre> 
+<br/><br/>
+До новых встреч!
+</body>
+</html>

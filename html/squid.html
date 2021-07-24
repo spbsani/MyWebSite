@@ -1,0 +1,47 @@
+<html>
+<meta charset="Window-1251">
+ <head>
+   <title>Установка Squid с поддержкой базовой аутентификации на Slackware 13.37</title>
+ </head>
+
+<style>
+body{
+background-color:#98BFF8;
+-moz-background-size: 100%;
+-webkit-background-size: 100%;
+-o-background-size: 100%;
+background-size: 100%;
+}
+</style>
+<body style="background-attachment:fixed" topmargin="0">
+<center><h1>Установка Squid с поддержкой базовой аутентификации на Slackware 13.37</h1></center>
+<hr>
+<br/><br/>
+<pre>
+<center><h2>Порядок действий</h2></center> 
+<center><img src="http://sokolov82.ru/html/squid.jpg"></center> 
+<br></br>
+<h2>
+1.Скачиваем Squid с http://www.squid-cache.org/
+2.Распаковываем 
+3.Собираем ./configure --enable-basic-auth-helpers="NCSA" && make && make install
+4.Если была произведена неправельная сборка то лучше сделать make clean перед сборкой
+5.Конфигурирование <a href="http://www.sokolov82.ru/html/squid.conf.html">squid.conf</a>
+6.Добавление пользователей "htpasswd"
+    a)Создание нового файла passwd делается только первый раз. passwd - это файл, где будут храниться пароли с именами name_user.
+    После ввода команда запросит пароль и потверждение пароля.
+    b)htpasswd -c /etc/squid/passwd name_user
+    c)Добавление следующих пользователей делается так: htpasswd /etc/squid/passwd name_user
+7.Запрещаем HTTP через NAT:iptables -A FORWARD -i eth1 -p tcp --dport 80 -j REJECT
+8. /usr/local/squid/sbin/squid -z
+9. /usr/local/squid/sbin/squid -D
+10.Заходим в браузер и добавляем прокси сервер, в internet Explorer это Свойства браузера>>>подключения>>>Настройка сети>>> 
+использовать проси-сервер и пишем ip своего сервера и порт 3128
+11.И раузер запросит имя и пользоавателя которого мы завели.
+<h2>
+<hr>
+</pre> 
+<br/><br/>
+До новых встреч!
+</body>
+</html>

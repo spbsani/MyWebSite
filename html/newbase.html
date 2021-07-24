@@ -1,0 +1,39 @@
+<html>
+<meta charset="Window-1251">
+ <head>
+   <title>Как создать пользователя и дать ему все права к этой базе</title>
+ </head>
+
+<style>
+body{
+background: url(/Fons/City_Landscape_Background.jpg) no-repeat;
+-moz-background-size: 100%;
+-webkit-background-size: 100%;
+-o-background-size: 100%;
+background-size: 100%;
+}
+</style>
+<body style="background-attachment:fixed" topmargin="0">
+<center><h1>Моя Напоминалка</h1></center>
+<center><h3>Как создать пользователя , привязать его к этой базе и дать ему все права к этой базе.</h3></crnter>
+ 
+<hr>
+
+<p align="center">
+<h3>Выдержка из документации </h3><br/>
+<br/>
+<p align="left">
+shell> mysql --user=root mysql <br/>
+mysql> GRANT ALL PRIVILEGES ON *.* TO monty@localhost IDENTIFIED BY 'some_pass' WITH GRANT OPTION; <br/>
+mysql> GRANT ALL PRIVILEGES ON *.* TO monty@"%"IDENTIFIED BY 'some_pass' WITH GRANT OPTION; <br/>
+mysql> GRANT RELOAD,PROCESS ON *.* TO admin@localhost; <br/>
+mysql> GRANT USAGE ON *.* TO dummy@localhost;  <br/>
+ 
+
+
+<hr>
+<br/><br/>
+<p align="left">
+До новых встреч!
+</body>
+</html>

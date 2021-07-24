@@ -1,0 +1,96 @@
+<html>
+<meta charset="Window-1251">
+ <head>
+   <title>Bonding</title>
+ </head>
+
+<style>
+body{
+background-color:#CBC3BE;
+-moz-background-size: 100%;
+-webkit-background-size: 100%;
+-o-background-size: 100%;
+background-size: 100%;
+}
+</style>
+<body style="background-attachment:fixed" topmargin="0">
+<center><h1>Настройка объединения сетевых интервейсов на Slackware 14.1</h1></center>
+<hr>
+<br/><br/>
+<pre>
+<center><h2>Bonding On Slackware 14.1 </h2></center>
+<br></br>
+1.Для начам мы компилируем файл: gcc -Wall -O -I/usr/src/linux/Documentation/networking/include ifenslave.c  -o ifenslave
+2.Копируем в директорию запуска: cp ifenslave /sbin/ifenslave
+3.Создаем в запускающий файл: touch /etc/rc.d/rc.bond и незабываем его сделать запускающим(chmod 755 rc.bond)
+<center><h2>Содержимое rc.bond</h2><center>
+<p><img src="http://www.sokolov82.ru/html/bond/rc.bond.jpg"<p>
+<p align="left">
+4.Для авто запуска прописываем в /etc/rc.d/rc.M 
+</p>
+
+<p><img src="http://www.sokolov82.ru/html/bond/rc.M.jpg"<p>
+<p align="left">
+5.В файл сетевых настроек дописываем новый интерфейс "bond0"
+<p><img src="http://www.sokolov82.ru/html/bond/rc.inet1.conf.jpg"<p>
+</p>
+<p align="left">
+Остальные поля сетевых интерфейсоф не пишем т.к у нас будет один интерфейс из двух сетевых картО
+<p align="left">
+6.Сетевые карты почемуто работали в режиме half, т.к Bonding работает только в режиме full duplex я прописал в  /etc/rc.d/rc.local
+Две строчи для запуска интерфейсов в одинакомом редиме.
+---------------------------------------
+- /sbin/mii-tool -F 100baseTx-FD eth0 -
+- /sbin/mii-tool -F 100baseTx-FD eth1 -
+---------------------------------------
+7.Презагружаес систему
+8.Для проверки мы воспользуемся командами 
+cat /proc/net/bonding/bond0
+</p>
+<center><h2>Вывод команды "cat" </h2><center>
+<p><img src="http://www.sokolov82.ru/html/bond/cat.jpg"<p>
+
+<p align="left">
+9.К сожелению утилита mii-tool bond0 отображает не коректно скорость сетевого интерфейса
+<img src="http://www.sokolov82.ru/html/bond/mii-tool.jpg">
+
+10.Утилиткой  "ethtool" можно посмотреть возможности сетевых интерфейсов.
+</p>
+<center><h2>Вывод утилиты "ethtool" </h2><center>
+<p><img src="http://www.sokolov82.ru/html/bond/ethtool.jpg"<p>
+<p align="left">
+11.Так же можно посмотреть состояние интерфейсоф командами: " tail -f /var/log/messages" и "dmesg | grep bond0"
+</p>
+<center><h2>Вывод утилит "dmesg и tail" </h2><center>
+<p><img src="http://www.sokolov82.ru/html/bond/dmesg.jpg"<p>
+<p align="left">
+12.В моем случае я подлючаю linux машину к комутатору фирмы "Allied Telesis AT-GS950/48"
+и для рпботы в редиме склеивания необходимо настроить порты.
+Для этого необходимо перейти к каталог Bridge-
+                                             ->Trank Config-
+                                                           ->Trunking и установить галочки на слеиваемых портах 
+<center><h2>"Alied" </h2><center>
+<p><img src="http://www.sokolov82.ru/html/bond/trunking.jpg"<p>
+<p align="left">
+Если все хорошо и Linux машина соединилась с комутатором то мы увидим состояние портов и мак адресс будет отображен при выводе команды: 
+cat /proc/net/bonding/bond0 как (Partner Mac Address: ec:cd:6d:c8:5d:dc).
+</p>
+<center><h2>"LACPGroup Status" </h2><center>
+<p><img src="http://www.sokolov82.ru/html/bond/Lacp.jpg"<p>
+
+Вот на этом кажнтся и все :)
+<p align="left">
+Список татей:
+<br/><br/>
+<b><a href="https://www.howtoforge.com/nic-bonding-on-slackware-12.1">NIC Bonding On Slackware 12.1</a></b>
+<b><a href="http://www.linux.org.ru/forum/admin/6450462">Соединение через управляемый свитч.</a></b>
+<b><a href="http://www.linuxquestions.org/questions/linux-networking-3/bond-always-in-10half-duplex-516066/">bond always in 10Half-Duplex?</a></b>
+<b><a href="http://www.cyberciti.biz/faq/howto-setup-linux-lan-card-find-out-full-duplex-half-speed-or-mode/">Linux LAN card: Find out full duplex/half speed or mode</a></b>
+<b><a href="https://habrahabr.ru/post/58218/">Объединение сетевых интерфейсов в linux</a></b>
+</p>
+<hr>
+</pre> 
+<br/><br/>
+До новых встреч!
+</body>
+</html>

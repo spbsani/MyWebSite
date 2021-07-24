@@ -1,0 +1,40 @@
+#!/bin/sh
+# /etc/rc.d/rc.pptpd
+#
+# description: control pptp server
+#
+case "$1" in
+start)
+echo 1 > /proc/sys/net/ipv4/ip_forward
+modprobe ppp_async
+modprobe ppp_generic
+modprobe ppp_mppe
+modprobe slhc
+modprobe ip_gre
+modprobe ip_conntrack_pptp
+#modprobe ip_nat_ppt
+
+if /usr/local/sbin/pptpd; then
+touch /var/lock/subsys/pptpd
+    fi
+        ;;
+    stop)
+    killall pptpd
+    rm -f /var/lock/subsys/pptpd
+    ;;
+    restart)
+    killall pptpd
+    ;;
+    restart)
+        killall pptpd
+        if /usr/local/sbin/pptpd; then
+touch /var/lock/subsys/pptpd
+        fi
+        ;;
+    status)
+ifconfig
+;;
+*)
+echo "Usage: $0 {start|stop|restart|status}"
+;;
+esac

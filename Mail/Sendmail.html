@@ -1,0 +1,161 @@
+<html>
+<meta charset="Window-1251">
+ <head>
+   <title>Sendmail-Relay</title>
+ </head>
+
+<style>
+body{
+background-color:#FFCC66;
+-moz-background-size: 100%;
+-webkit-background-size: 100%;
+-o-background-size: 100%;
+background-size: 100%;
+}
+</style>
+<body style="background-attachment:fixed" topmargin="0">
+<center><h1>Установка Sendmail в качестве транзитного почтового релея</h1></center>
+<hr>
+<br/><br/>
+<pre>
+ 	
+Установка Sendmail в качестве транзитного почтового релея
+
+Тэги: "Настройка sendmail" "Почтовый сервер"
+
+Настраиваем sendmail (8.12.6/7) в качестве транзитного почтового релея.
+
+Установка sendmail
+
+Сначала устанавливаем из портов sendmail c поддержкой cyrus sasl (система аутентификации).
+
+<h2>Настройка sendmail</h2>
+
+Будем считать, что мы настраиваем все те же два виртуальных почтовых домена: perldoc.ru и perlfaq.ru. Для настройки sendmail в каечстве транзитного почтового сервера необходимо кроме файлов aliases и access создать (изи изменить) еще три файла:
+
+freebsd.mc
+relay-domains
+mailertable
+relay-domains
+
+В этом файле содержатся имена всех доменов, для которых наш сервер является транзитным. Файл расположен в каталоге /etc/mail и представляет собой список вида
+
+domain1.com
+domain2.com
+...
+...
+В этот файл мы добавляем строки
+
+perldoc.ru
+perlfaq.ru
+mailertable
+
+В файле mailertable мы указываем sendmail, куда перенаправлять почту, пришедшую на адреса в доменах perldoc.ru и perlfaq.ru. Поскольку наш сервер - транзитный, мы должны прописать
+
+perldoc.ru		smtp:mail.perldoc.ru
+perlfaq.ru		smtp:mail.perlfaq.ru
+Вся почта, пришедшая на любые адреса доменов perldoc.ru и perlfaq.ru будет направляться на почтовые сервера mail.perldoc.ru и mail.perlfaq.ru соответственно.
+
+freebsd.mc
+
+Теперь нам осталось только изменить конфигурацию файла freebsd.mc, чтобы sendmail научился работать с виртуальными почтовыми доменами. Здесь надо понимать, что в том случае, когда существует файл, у которого имя совпадает с названием машины (например, для машины с именем genius файл будет genius.mc), он используется вместо файла freebsd.mc.i
+
+Вот примерный вид конфигурационного файла:
+
+1  divert(0)
+2  VERSIONID(`$FreeBSD: src/etc/sendmail/freebsd.mc,v 1.10.2.16 16:39:14 gshapiro Exp $')
+3  OSTYPE(freebsd4)
+4  DOMAIN(generic)
+5
+6  FEATURE(access_db, `hash -o -T /etc/mail/access')
+ 7  FEATURE(blacklist_recipients)
+ 8  FEATURE(local_lmtp)
+ 9  FEATURE(mailertable, `hash -o /etc/mail/mailertable')
+ 10 dnl FEATURE(virtusertable, `hash -o /etc/mail/virtusertable')
+ 11 define(`confCR_FILE', `/etc/mail/relay-domains')dnl
+ 12 dnl Uncomment to allow relaying based on your MX records.
+ 13 dnl NOTE: This can allow sites to use your server as a backup MX without
+ 14 dnl       your permission.
+ 15 dnl FEATURE(relay_based_on_MX)
+ 16 
+ 17 dnl DNS based black hole lists
+ 18 dnl --------------------------------
+ 19 dnl DNS based black hole lists come and go on a regular basis
+ 20 dnl so this file will not serve as a database of the available servers.
+ 21 dnl For that, visit http://dmoz.org/Computers/Internet/Abuse/Spam/Blacklists/
+ 22 
+ 23 dnl Uncomment to activate Realtime Blackhole List
+ 24 dnl information available at http://www.mail-abuse.com/
+ 25 dnl NOTE: This is a subscription service as of July 31, 2001
+ 26 FEATURE(dnsbl)
+ 27 dnl Alternatively, you can provide your own server and rejection message:
+ 28 FEATURE(dnsbl, `blackholes.mail-abuse.org', `"550 Mail from " $&{client_addr} "
+ rejected, see http://mail-abuse.org/cgi-bin/lookup?" $&{client_addr}')
+ 29 
+ 30 dnl Dialup users should uncomment and define this appropriately
+ 31 dnl define(`SMART_HOST', `your.isp.mail.server')
+ 32 
+ 33 dnl Uncomment the first line to change the location of the default
+ 34 dnl /etc/mail/local-host-names and comment out the second line.
+ 35 dnl define(`confCW_FILE', `-o /etc/mail/sendmail.cw')
+ 36 dnl define(`confCW_FILE', `-o /etc/mail/local-host-names')
+ 37 
+ 38 dnl Uncomment both of the following lines to listen on IPv6 as well as IPv4
+ 39 dnl DAEMON_OPTIONS(`Name=IPv4, Family=inet')
+ 40 dnl DAEMON_OPTIONS(`Name=IPv6, Family=inet6')
+ 41 
+ 42 TRUST_AUTH_MECH(`GSSAPI DIGEST-MD5 CRAM-MD5 PLAIN LOGIN')dnl
+ 43 dnl define(`confAUTH_MECHANISMS', `GSSAPI DIGEST-MD5 CRAM-MD5 PLAIN LOGIN')dnl
+ 44 enl define(`confDEF_AUTH_INFO', `/etc/mail/auth/auth-info')dnl
+ 45 FEATURE(`no_default_msa')dnl turn off default entry for MSA
+ 46 DAEMON_OPTIONS(`Port=25, Name=MSA, M=E')dnl
+ 47 
+ 48 define(`confMAX_RCPTS_PER_MESSAGE', `10')
+ 49 define(`confMAX_MESSAGE_SIZE', `1048576')
+ 50
+ 51 define(`confBIND_OPTS', `WorkAroundBrokenAAAA')
+ 52 define(`confMAX_MIME_HEADER_LENGTH', `256/128')
+ 53 define(`confNO_RCPT_ACTION', `add-to-undisclosed')
+ 54 define(`confPRIVACY_FLAGS', `authwarnings,noexpn,novrfy')
+ 55 MAILER(local)
+ 56 MAILER(smtp)
+ 
+ 
+В строке 10 мы указываем имя файла трансляции виртуальных пользователей в настоящих и направление пересылки почты, а в 11-й - имена доменов, для которых мы пересылаем почту.
+
+Запуск и тестирование
+
+Собрав и установив файлы конфигурации sendmail, протестируем результат нашей работы:
+
+telnet relay1.perldoc.ru 25
+
+Escape character is '^]'.
+220 relay1.perldoc.ru ESMTP Sendmail 8.12.7/8.12.7; Sun, 18 Jan 2004 08:08:52 +0300 (MSK)
+helo stellar
+250 relay1.perldoc.ru Hello stellar [XXX.XXX.XXX.XXX], pleased to meet you
+mail from:stellar@perldoc.ru>
+250 2.1.0 ... Sender ok
+ rcpt to:
+ 250 2.1.5 ... Recipient ok
+ data
+ 354 Enter mail, end with "." on a line by itself
+ from:
+ to:
+ 
+ test passed
+ 
+ .
+ 250 2.0.0 i0I58qiZ007078 Message accepted for delivery
+ quit
+ 221 2.0.0 relay1.perldoc.ru closing connection
+ Connection closed by foreign host.
+ 
+При этом в лог-файле должна быть примерно такие записи:
+
+Jan 18 08:09:40 fw sm-mta[7078]: i0I58qiZ007078: from=,size=68, class=0, nrcpts=1, msgid=<200401180509.i0I58qiZ007078@relay1.perldoc.ru>, proto=SMTP, daemon=MSA, relay=stellar [XXX.XXX.XXX.XXX] Jan 18 08:09:42 fw sm-mta[7081]: i0I58qiZ007078: to=, delay=00:00:21, xdelay=00:00:02, mailer=esmtp, pri=30055, relay=mail.perldoc.ru. [YYY.YYY.Y.YYY], dsn=2.0.0, stat=Sent (h1ID1Ja5019222 Message accepted for delivery)
+<hr>
+</pre> 
+<br/><br/>
+До новых встреч!
+</body>
+</html>
